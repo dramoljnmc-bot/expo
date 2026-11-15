@@ -1,145 +1,577 @@
-{
-  "expo": {
-    "name": "BareExpo",
-    "slug": "bare-expo",
-    "icon": "./assets/icon.png",
-    "scheme": "bareexpo",
-    "facebookScheme": "fb629712900716487",
-    "facebookAppId": "629712900716487",
-    "facebookDisplayName": "Expo APIs",
-    "privacy": "unlisted",
-    "version": "1.0.0",
-    "platforms": ["ios", "android", "web", "macos"],
-    "userInterfaceStyle": "automatic",
-    "android": {
-      "scheme": ["com.googleusercontent.apps.29635966244-knmlpr1upnv6rs4bumqea7hpit4o7kg2"],
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#000020"
-      },
-      "package": "dev.expo.payments"
-    },
-    "ios": {
-      "scheme": [
-        "msauth.dev.expo.Payments",
-        "com.googleusercontent.apps.29635966244-v8mbqt2mtno71thelt7f2i6pob104f6e"
-      ],
-      "bundleIdentifier": "dev.expo.Payments",
-      "supportsTablet": true,
-      "requireFullScreen": false,
-      "entitlements": {
-        "com.apple.security.application-groups": ["group.dev.expo.Payments"]
-      },
-      "associatedDomains": ["applinks:bare-expo.expo.app", "webcredentials:bare-expo.expo.app"]
-    },
-    "web": {
-      "bundler": "metro"
-    },
-    "notification": {
-      "serviceWorkerPath": "/expo-service-worker.js",
-      "vapidPublicKey": "BNHvR05XkY5LH9GdN0GreLx2wZnK9IwNJGVmo3jujIkFni4of26E3U3fnt9nUrZfM7h0omdIHKM0eshkzTSFOWQ"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "2c28de10-a2cd-11e6-b8ce-59d1587e6774"
-      }
-    },
-    "runtimeVersion": "1.0.0",
-    "updates": {
-      "url": "https://u.expo.dev/2c28de10-a2cd-11e6-b8ce-59d1587e6774"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-video",
-      "expo-background-fetch",
-      [
-        "expo-app-intents",
-        {
-          "directory": "../native-component-list/app-intents"
-        }
-      ],
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/splash-icon.png",
-          "resizeMode": "cover",
-          "backgroundColor": "#000020"
-        }
-      ],
-      [
-        "expo-font",
-        {
-          "fonts": ["./assets/icomoon.ttf"]
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "isAndroidBackgroundLocationEnabled": true,
-          "isIosBackgroundLocationEnabled": true,
-          "isAndroidMotionActivityEnabled": true,
-          "isAndroidMotionActivityForegroundServiceEnabled": true,
-          "androidForegroundServiceIcon": "./assets/location_service_icon.png"
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/ic_stat_notifications.png",
-          "color": "#4630EB",
-          "sounds": ["./assets/notification.wav"]
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos",
-          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos",
-          "isAccessMediaLocationEnabled": true
-        }
-      ],
-      [
-        "expo-tracking-transparency",
-        {
-          "userTrackingPermission": "Allow Expo projects to use data for tracking the user or the device"
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "enableMinifyInReleaseBuilds": true,
-            "usePrecompiledHeaders": true
-          }
-        }
-      ],
-      [
-        "expo-web-browser",
-        {
-          "experimentalLauncherActivity": true
-        }
-      ],
-      [
-        "expo-audio",
-        {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone.",
-          "enableBackgroundPlayback": true,
-          "enableBackgroundRecording": true
-        }
-      ],
-      "./plugins/withAndroidNetworkSecurityConfig",
-      "./plugins/withBenchmarkModules"
-    ],
-    "experiments": {
-      "outOfTreePlatforms": true,
-      "inlineModules": {
-        "watchedDirectories": [
-          "../native-component-list/src/screens/inlineModules/inlineModulesExamples",
-          "../native-component-list/src/screens/ModulesCore",
-          "../native-component-list/app-intents"
-        ],
-        "xcodeProjectTargets": ["BareExpo"]
-      }
-    }
-  }
+// Patient Health App – first version (sample data, no database yet)
+// Paste this whole file into App.js on https://snack.expo.dev
+import React, { useState } from 'react';
+import {
+  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet,
+  SafeAreaView, Modal, Switch, Alert, StatusBar,
+} from 'react-native';
+import Svg, { Circle, Polyline, Rect } from 'react-native-svg';
+
+// ---------- Colours ----------
+const C = {
+  bg: '#F4F7F6', card: '#FFFFFF', ink: '#0F2A26', muted: '#4B5F5B',
+  line: '#E1E8E6', accent: '#0F766E', accentSoft: '#E3F1EE',
+  warn: '#B45309', warnSoft: '#FDF1E3', warnInk: '#8A3B06',
+  red: '#8F1D1D', redSoft: '#FDECEC',
+};
+
+// ---------- Sample starting data ----------
+const START_SUGAR = [
+  { id: 1, day: 'Mon', type: 'Fasting', value: 118 },
+  { id: 2, day: 'Tue', type: 'Fasting', value: 104 },
+  { id: 3, day: 'Wed', type: 'Fasting', value: 126 },
+  { id: 4, day: 'Thu', type: 'Fasting', value: 112 },
+  { id: 5, day: 'Fri', type: 'Fasting', value: 98 },
+  { id: 6, day: 'Sat', type: 'Fasting', value: 121 },
+  { id: 7, day: 'Sun', type: 'Fasting', value: 112 },
+];
+const START_MEDS = [
+  { id: 'm1', name: 'Metformin 500 mg', time: '8:00 AM', note: 'After breakfast', taken: true },
+  { id: 't1', name: 'Telmisartan 40 mg', time: '8:00 AM', note: 'Before breakfast', taken: true },
+  { id: 'a1', name: 'Atorvastatin 10 mg', time: '9:00 PM', note: 'After dinner', taken: false },
+  { id: 'm2', name: 'Metformin 500 mg', time: '9:00 PM', note: 'After dinner', taken: false },
+];
+const WEEK_STEPS = [7200, 8400, 5100, 9100, 6800, 8600, 3240];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function sugarStatus(type, v) {
+  // Common targets for people with diabetes; the doctor can change these later
+  const high = type === 'Fasting' || type === 'Before meal' ? 130 : 180;
+  if (v < 70) return { label: 'Low', bg: C.redSoft, fg: C.red };
+  if (v > high) return { label: 'High', bg: C.warnSoft, fg: C.warnInk };
+  return { label: 'In target', bg: C.accentSoft, fg: '#0B5A54' };
 }
+
+// ---------- Small reusable pieces ----------
+function Card({ children, style }) {
+  return <View style={[s.card, style]}>{children}</View>;
+}
+function Badge({ label, bg, fg }) {
+  return (
+    <View style={[s.badge, { backgroundColor: bg }]}>
+      <Text style={[s.badgeText, { color: fg }]}>{label}</Text>
+    </View>
+  );
+}
+function Button({ title, onPress, outline, style }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[s.btn, outline ? s.btnOutline : null, style]}
+      accessibilityRole="button"
+    >
+      <Text style={[s.btnText, outline ? { color: C.accent } : null]}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ---------- Screens ----------
+function LoginScreen({ onLogin }) {
+  const [role, setRole] = useState('patient');
+  const [phone, setPhone] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+
+  const sendOtp = () => {
+    if (phone.replace(/\D/g, '').length !== 10) {
+      Alert.alert('Check number', 'Please enter a 10-digit mobile number.');
+      return;
+    }
+    setOtpSent(true);
+    Alert.alert('OTP sent', 'For this demo, enter any 4 digits.');
+  };
+  const verify = () => {
+    if (otp.length !== 4) {
+      Alert.alert('Check OTP', 'Please enter the 4-digit OTP.');
+      return;
+    }
+    onLogin(role);
+  };
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 48, gap: 24 }}>
+      <View style={{ gap: 12 }}>
+        <View style={s.logo}><Text style={{ color: '#fff', fontSize: 26, fontWeight: '700' }}>+</Text></View>
+        <Text style={s.h1}>Your health records,{'\n'}all in one place</Text>
+        <Text style={s.muted}>History, reports, medicines and sugar charts, shared securely with your doctor.</Text>
+      </View>
+
+      <View style={{ gap: 8 }}>
+        <Text style={s.label}>I am a</Text>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          {['patient', 'doctor'].map((r) => (
+            <TouchableOpacity
+              key={r}
+              onPress={() => setRole(r)}
+              style={[s.roleBox, role === r && s.roleBoxOn]}
+            >
+              <Text style={[s.roleText, role === r && { color: C.accent }]}>
+                {r === 'patient' ? 'Patient' : 'Doctor'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={{ gap: 12 }}>
+        <Text style={s.label}>Mobile number</Text>
+        <View style={s.inputRow}>
+          <Text style={s.muted}>+91</Text>
+          <TextInput
+            style={s.input}
+            keyboardType="phone-pad"
+            placeholder="98765 43210"
+            placeholderTextColor="#8A9A96"
+            value={phone}
+            onChangeText={setPhone}
+            maxLength={11}
+          />
+        </View>
+        {otpSent && (
+          <TextInput
+            style={[s.inputRow, s.input, { paddingHorizontal: 14 }]}
+            keyboardType="number-pad"
+            placeholder="Enter 4-digit OTP"
+            placeholderTextColor="#8A9A96"
+            value={otp}
+            onChangeText={setOtp}
+            maxLength={4}
+          />
+        )}
+        <Button title={otpSent ? 'Verify & Login' : 'Send OTP'} onPress={otpSent ? verify : sendOtp} />
+        <Text style={[s.muted, { fontSize: 12, textAlign: 'center' }]}>
+          Your data is encrypted and shared only with doctors you approve.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+function HomeScreen({ sugar, meds, setMeds, go }) {
+  const latest = sugar[sugar.length - 1];
+  const st = sugarStatus(latest.type, latest.value);
+  const next = meds.find((m) => !m.taken);
+  const steps = WEEK_STEPS[6];
+
+  const markTaken = () => {
+    if (!next) return;
+    setMeds(meds.map((m) => (m.id === next.id ? { ...m, taken: true } : m)));
+  };
+
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <Text style={s.muted}>Good evening</Text>
+      <Text style={s.h2}>Ravi Kumar</Text>
+
+      <View style={s.hero}>
+        {next ? (
+          <>
+            <View style={s.rowBetween}>
+              <Text style={s.heroSmall}>Next medicine</Text>
+              <Text style={s.heroSmall}>{next.time}</Text>
+            </View>
+            <Text style={s.heroBig}>{next.name}</Text>
+            <Text style={s.heroSmall}>{next.note}</Text>
+            <TouchableOpacity style={s.heroBtn} onPress={markTaken}>
+              <Text style={{ color: C.ink, fontWeight: '600' }}>Mark as taken</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <Text style={s.heroBig}>All medicines taken today ✓</Text>
+        )}
+      </View>
+
+      <Text style={s.section}>Latest readings</Text>
+      <View style={s.grid}>
+        <TouchableOpacity style={[s.card, s.tile]} onPress={() => go('sugar')}>
+          <Text style={s.tileLabel}>Blood sugar · {latest.type}</Text>
+          <Text style={s.tileValue}>{latest.value} <Text style={s.unit}>mg/dL</Text></Text>
+          <Badge {...st} />
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.card, s.tile]} onPress={() => go('activity')}>
+          <Text style={s.tileLabel}>Steps today</Text>
+          <Text style={s.tileValue}>{steps.toLocaleString('en-IN')}</Text>
+          <Badge label="Low activity" bg={C.warnSoft} fg={C.warnInk} />
+        </TouchableOpacity>
+        <View style={[s.card, s.tile]}>
+          <Text style={s.tileLabel}>Blood pressure</Text>
+          <Text style={s.tileValue}>128/82</Text>
+          <Badge label="Normal" bg={C.accentSoft} fg="#0B5A54" />
+        </View>
+        <View style={[s.card, s.tile]}>
+          <Text style={s.tileLabel}>HbA1c</Text>
+          <Text style={s.tileValue}>6.8 <Text style={s.unit}>%</Text></Text>
+          <Text style={[s.muted, { fontSize: 11 }]}>Report · 2 Nov</Text>
+        </View>
+      </View>
+
+      <Card>
+        <Text style={{ fontWeight: '600', color: C.ink }}>Dr. Anita Sharma</Text>
+        <Text style={s.muted}>Follow-up · Fri, 20 Nov, 11:30 AM</Text>
+      </Card>
+    </ScrollView>
+  );
+}
+
+function SugarChart({ values }) {
+  const W = 320, H = 160, min = 60, max = 200;
+  const y = (v) => H - ((Math.min(Math.max(v, min), max) - min) / (max - min)) * H;
+  const step = values.length > 1 ? (W - 30) / (values.length - 1) : 0;
+  const pts = values.map((v, i) => `${15 + i * step},${y(v)}`).join(' ');
+  return (
+    <Svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`}>
+      <Rect x="0" y={y(130)} width={W} height={y(80) - y(130)} fill={C.accentSoft} />
+      <Polyline points={pts} fill="none" stroke={C.accent} strokeWidth="2.5" />
+      {values.map((v, i) => (
+        <Circle key={i} cx={15 + i * step} cy={y(v)} r="4" fill={C.accent} />
+      ))}
+    </Svg>
+  );
+}
+
+function SugarScreen({ sugar, setSugar }) {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+  const [type, setType] = useState('Fasting');
+  const types = ['Fasting', 'Before meal', 'After meal', 'Random'];
+
+  const fasting = sugar.filter((r) => r.type === 'Fasting').slice(-7);
+  const avg = fasting.length
+    ? Math.round(fasting.reduce((a, r) => a + r.value, 0) / fasting.length) : 0;
+
+  const save = () => {
+    const v = parseInt(value, 10);
+    if (!v || v < 20 || v > 600) {
+      Alert.alert('Check value', 'Please enter a sugar value between 20 and 600 mg/dL.');
+      return;
+    }
+    setSugar([...sugar, { id: Date.now(), day: 'Today', type, value: v }]);
+    setValue('');
+    setOpen(false);
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={s.page}>
+        <Text style={s.h2}>Sugar chart</Text>
+        <Card style={{ gap: 8 }}>
+          <Text style={s.tileLabel}>Average fasting (last 7)</Text>
+          <Text style={s.tileValue}>{avg} <Text style={s.unit}>mg/dL</Text></Text>
+          <SugarChart values={fasting.map((r) => r.value)} />
+          <Text style={[s.muted, { fontSize: 11 }]}>Shaded band = fasting target 80–130</Text>
+        </Card>
+
+        <Text style={s.section}>All readings</Text>
+        <Card style={{ padding: 0 }}>
+          {[...sugar].reverse().map((r, i) => {
+            const st = sugarStatus(r.type, r.value);
+            return (
+              <View key={r.id} style={[s.listRow, i > 0 && s.listDivider]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: '600', color: C.ink }}>{r.type}</Text>
+                  <Text style={[s.muted, { fontSize: 12 }]}>{r.day}</Text>
+                </View>
+                <Text style={{ fontWeight: '700', fontSize: 16, marginRight: 10, color: C.ink }}>{r.value}</Text>
+                <Badge {...st} />
+              </View>
+            );
+          })}
+        </Card>
+      </ScrollView>
+
+      <TouchableOpacity style={s.fab} onPress={() => setOpen(true)} accessibilityLabel="Add sugar reading">
+        <Text style={{ color: '#fff', fontSize: 30, lineHeight: 32 }}>+</Text>
+      </TouchableOpacity>
+
+      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
+        <View style={s.sheetBack}>
+          <View style={s.sheet}>
+            <Text style={s.h2}>Add sugar reading</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {types.map((t) => (
+                <TouchableOpacity key={t} onPress={() => setType(t)} style={[s.chip, type === t && s.chipOn]}>
+                  <Text style={{ color: type === t ? '#fff' : C.ink, fontWeight: '600' }}>{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={[s.inputRow, s.input, { paddingHorizontal: 14, fontSize: 20 }]}
+              keyboardType="number-pad"
+              placeholder="Value in mg/dL"
+              placeholderTextColor="#8A9A96"
+              value={value}
+              onChangeText={setValue}
+              maxLength={3}
+            />
+            <Button title="Save reading" onPress={save} />
+            <Button title="Cancel" outline onPress={() => setOpen(false)} />
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+function MedsScreen({ meds, setMeds }) {
+  const done = meds.filter((m) => m.taken).length;
+  const toggle = (id) => setMeds(meds.map((m) => (m.id === id ? { ...m, taken: !m.taken } : m)));
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <Text style={s.h2}>Medicines</Text>
+      <Card style={{ gap: 8 }}>
+        <View style={s.rowBetween}>
+          <Text style={{ fontWeight: '600', color: C.ink }}>Today's progress</Text>
+          <Text style={s.muted}>{done} of {meds.length} taken</Text>
+        </View>
+        <View style={s.barBack}>
+          <View style={[s.barFill, { width: `${(done / meds.length) * 100}%` }]} />
+        </View>
+      </Card>
+      {meds.map((m) => (
+        <Card key={m.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: '600', fontSize: 15, color: C.ink }}>{m.name}</Text>
+            <Text style={[s.muted, { fontSize: 12 }]}>{m.time} · {m.note}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => toggle(m.id)}
+            style={[s.pill, m.taken ? { backgroundColor: C.accentSoft, borderColor: C.accentSoft } : null]}
+          >
+            <Text style={{ fontWeight: '600', color: m.taken ? '#0B5A54' : C.accent }}>
+              {m.taken ? 'Taken' : 'Take'}
+            </Text>
+          </TouchableOpacity>
+        </Card>
+      ))}
+    </ScrollView>
+  );
+}
+
+function ActivityScreen() {
+  const [goal, setGoal] = useState(8000);
+  const [lowAlert, setLowAlert] = useState(true);
+  const [mealWalk, setMealWalk] = useState(true);
+  const today = WEEK_STEPS[6];
+  const pct = Math.min(today / goal, 1);
+  const r = 60, circ = 2 * Math.PI * r;
+  const low = pct < 0.6;
+
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <Text style={s.h2}>Activity</Text>
+      {low && (
+        <View style={[s.card, { backgroundColor: C.warnSoft, borderColor: '#F3D9B8' }]}>
+          <Text style={{ fontWeight: '700', color: '#5C2804' }}>Your activity is low today</Text>
+          <Text style={{ color: '#6B3005', marginTop: 4 }}>
+            {(goal - today).toLocaleString('en-IN')} more steps to reach your goal. A 20-minute walk after dinner also helps control sugar.
+          </Text>
+        </View>
+      )}
+      <Card style={{ alignItems: 'center' }}>
+        <View style={{ width: 150, height: 150 }}>
+        <Svg width={150} height={150} viewBox="0 0 150 150">
+          <Circle cx="75" cy="75" r={r} stroke={C.line} strokeWidth="12" fill="none" />
+          <Circle
+            cx="75" cy="75" r={r} stroke={low ? C.warn : C.accent} strokeWidth="12" fill="none"
+            strokeLinecap="round" strokeDasharray={`${circ * pct} ${circ}`}
+            transform="rotate(-90 75 75)"
+          />
+        </Svg>
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={s.tileValue}>{today.toLocaleString('en-IN')}</Text>
+            <Text style={[s.muted, { fontSize: 12 }]}>of {goal.toLocaleString('en-IN')}</Text>
+          </View>
+        </View>
+        <Text style={[s.muted, { marginTop: 6 }]}>steps today</Text>
+      </Card>
+
+      <Card style={{ gap: 8 }}>
+        <Text style={{ fontWeight: '700', color: C.ink }}>This week</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 8 }}>
+          {WEEK_STEPS.map((v, i) => (
+            <View key={i} style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+              <View style={{
+                width: '100%', borderRadius: 6, height: Math.max(6, (v / 10000) * 80),
+                backgroundColor: i === 6 ? C.warn : v >= goal ? C.accent : '#9FB3AE',
+              }} />
+              <Text style={{ fontSize: 11, color: C.muted }}>{DAYS[i]}</Text>
+            </View>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={{ gap: 14 }}>
+        <View style={s.rowBetween}>
+          <Text style={{ fontWeight: '600', color: C.ink }}>Daily step goal</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <TouchableOpacity style={s.round} onPress={() => setGoal(Math.max(2000, goal - 500))}><Text style={s.roundText}>−</Text></TouchableOpacity>
+            <Text style={{ fontWeight: '700', minWidth: 50, textAlign: 'center', color: C.ink }}>{goal.toLocaleString('en-IN')}</Text>
+            <TouchableOpacity style={s.round} onPress={() => setGoal(Math.min(15000, goal + 500))}><Text style={s.roundText}>+</Text></TouchableOpacity>
+          </View>
+        </View>
+        <View style={s.rowBetween}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: '600', color: C.ink }}>Low activity reminder</Text>
+            <Text style={[s.muted, { fontSize: 12 }]}>At 6:00 PM if under 60% of goal</Text>
+          </View>
+          <Switch value={lowAlert} onValueChange={setLowAlert} trackColor={{ true: C.accent }} />
+        </View>
+        <View style={s.rowBetween}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: '600', color: C.ink }}>Walk after meals</Text>
+            <Text style={[s.muted, { fontSize: 12 }]}>Nudge 15 min after lunch and dinner</Text>
+          </View>
+          <Switch value={mealWalk} onValueChange={setMealWalk} trackColor={{ true: C.accent }} />
+        </View>
+      </Card>
+      <Text style={[s.muted, { fontSize: 12 }]}>Steps are sample data. Next version reads them from Apple Health.</Text>
+    </ScrollView>
+  );
+}
+
+function ProfileScreen({ onLogout }) {
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <Text style={s.h2}>Ravi Kumar</Text>
+      <Text style={s.muted}>Male · 52 yrs · Blood group B+</Text>
+      <View style={[s.card, { backgroundColor: C.redSoft, borderColor: '#F5C6C6' }]}>
+        <Text style={{ fontWeight: '700', color: C.red }}>Allergies</Text>
+        <Text style={{ color: C.red, marginTop: 4 }}>Penicillin · Sulfa drugs</Text>
+      </View>
+      <Card style={{ gap: 6 }}>
+        <Text style={s.tileLabel}>CONDITIONS</Text>
+        <Text style={{ color: C.ink }}>Type 2 diabetes · since 2019</Text>
+        <Text style={{ color: C.ink }}>Hypertension · since 2021</Text>
+        <Text style={[s.tileLabel, { marginTop: 8 }]}>SURGERIES</Text>
+        <Text style={{ color: C.ink }}>Appendectomy · 2008</Text>
+        <Text style={[s.tileLabel, { marginTop: 8 }]}>FAMILY HISTORY</Text>
+        <Text style={{ color: C.ink }}>Father – diabetes, heart disease</Text>
+      </Card>
+      <Button title="Log out" outline onPress={onLogout} />
+    </ScrollView>
+  );
+}
+
+function DoctorScreen({ onLogout }) {
+  const patients = [
+    { n: 'Ravi Kumar', d: 'T2 diabetes · sugar 112 today', b: 'Stable', warn: false },
+    { n: 'Meena Deshpande', d: 'Sugar 264 after lunch', b: 'High sugar', warn: true },
+    { n: 'Arjun Joshi', d: 'Missed 3 doses this week', b: 'Missed meds', warn: true },
+  ];
+  return (
+    <ScrollView contentContainerStyle={s.page}>
+      <Text style={s.muted}>Doctor ID · DR-48213</Text>
+      <Text style={s.h2}>Dr. Anita Sharma</Text>
+      <Text style={s.section}>My patients</Text>
+      <Card style={{ padding: 0 }}>
+        {patients.map((p, i) => (
+          <View key={p.n} style={[s.listRow, i > 0 && s.listDivider]}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: '600', color: C.ink }}>{p.n}</Text>
+              <Text style={[s.muted, { fontSize: 12 }]}>{p.d}</Text>
+            </View>
+            <Badge
+              label={p.b}
+              bg={p.warn ? C.warnSoft : C.accentSoft}
+              fg={p.warn ? C.warnInk : '#0B5A54'}
+            />
+          </View>
+        ))}
+      </Card>
+      <Text style={[s.muted, { fontSize: 12 }]}>Doctor side is a preview. Full version comes after the database is set up.</Text>
+      <Button title="Log out" outline onPress={onLogout} />
+    </ScrollView>
+  );
+}
+
+// ---------- App with bottom tabs ----------
+const TABS = [
+  { key: 'home', label: 'Home' },
+  { key: 'sugar', label: 'Sugar' },
+  { key: 'meds', label: 'Medicines' },
+  { key: 'activity', label: 'Activity' },
+  { key: 'profile', label: 'Profile' },
+];
+
+export default function App() {
+  const [role, setRole] = useState(null);
+  const [tab, setTab] = useState('home');
+  const [sugar, setSugar] = useState(START_SUGAR);
+  const [meds, setMeds] = useState(START_MEDS);
+
+  const logout = () => { setRole(null); setTab('home'); };
+
+  let body;
+  if (!role) body = <LoginScreen onLogin={setRole} />;
+  else if (role === 'doctor') body = <DoctorScreen onLogout={logout} />;
+  else if (tab === 'home') body = <HomeScreen sugar={sugar} meds={meds} setMeds={setMeds} go={setTab} />;
+  else if (tab === 'sugar') body = <SugarScreen sugar={sugar} setSugar={setSugar} />;
+  else if (tab === 'meds') body = <MedsScreen meds={meds} setMeds={setMeds} />;
+  else if (tab === 'activity') body = <ActivityScreen />;
+  else body = <ProfileScreen onLogout={logout} />;
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }}>
+      <StatusBar barStyle="dark-content" />
+      <View style={{ flex: 1 }}>{body}</View>
+      {role === 'patient' && (
+        <View style={s.tabBar}>
+          {TABS.map((t) => (
+            <TouchableOpacity key={t.key} style={s.tabItem} onPress={() => setTab(t.key)}>
+              <View style={[s.tabDot, tab === t.key && { backgroundColor: C.accent }]} />
+              <Text style={[s.tabText, tab === t.key && { color: C.accent, fontWeight: '700' }]}>{t.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}
+
+// ---------- Styles ----------
+const s = StyleSheet.create({
+  page: { padding: 20, gap: 14, paddingBottom: 40 },
+  h1: { fontSize: 30, fontWeight: '700', color: C.ink, lineHeight: 36 },
+  h2: { fontSize: 24, fontWeight: '700', color: C.ink },
+  muted: { color: C.muted, fontSize: 14, lineHeight: 20 },
+  label: { fontSize: 13, fontWeight: '600', color: C.muted },
+  section: { fontSize: 15, fontWeight: '700', color: C.ink, marginTop: 4 },
+  card: { backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.line, padding: 14 },
+  logo: { width: 56, height: 56, borderRadius: 16, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
+  roleBox: { flex: 1, padding: 18, borderRadius: 14, borderWidth: 2, borderColor: C.line, backgroundColor: C.card },
+  roleBoxOn: { borderColor: C.accent, backgroundColor: C.accentSoft },
+  roleText: { fontSize: 16, fontWeight: '600', color: C.ink },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 52, paddingHorizontal: 14, backgroundColor: C.card, borderWidth: 1, borderColor: '#CFDAD7', borderRadius: 12 },
+  input: { flex: 1, fontSize: 16, color: C.ink },
+  btn: { height: 52, borderRadius: 12, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
+  btnOutline: { backgroundColor: C.card, borderWidth: 2, borderColor: C.accent },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  hero: { backgroundColor: C.accent, borderRadius: 18, padding: 18, gap: 8 },
+  heroSmall: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  heroBig: { color: '#fff', fontSize: 20, fontWeight: '700' },
+  heroBtn: { marginTop: 6, height: 44, borderRadius: 10, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  tile: { width: '47.5%', gap: 6 },
+  tileLabel: { fontSize: 12, fontWeight: '600', color: C.muted },
+  tileValue: { fontSize: 24, fontWeight: '700', color: C.ink },
+  unit: { fontSize: 12, fontWeight: '500', color: C.muted },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  badgeText: { fontSize: 11, fontWeight: '600' },
+  listRow: { flexDirection: 'row', alignItems: 'center', padding: 14 },
+  listDivider: { borderTopWidth: 1, borderTopColor: '#EEF2F1' },
+  fab: { position: 'absolute', right: 20, bottom: 20, width: 58, height: 58, borderRadius: 29, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
+  sheetBack: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: C.bg, padding: 20, paddingBottom: 40, borderTopLeftRadius: 22, borderTopRightRadius: 22, gap: 14 },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 18, borderWidth: 1, borderColor: '#CFDAD7', backgroundColor: C.card },
+  chipOn: { backgroundColor: C.ink, borderColor: C.ink },
+  barBack: { height: 8, borderRadius: 4, backgroundColor: C.line, overflow: 'hidden' },
+  barFill: { height: 8, borderRadius: 4, backgroundColor: C.accent },
+  pill: { minWidth: 76, height: 40, paddingHorizontal: 12, borderRadius: 20, borderWidth: 2, borderColor: C.accent, alignItems: 'center', justifyContent: 'center' },
+  round: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#CFDAD7', alignItems: 'center', justifyContent: 'center', backgroundColor: C.card },
+  roundText: { fontSize: 18, color: C.ink },
+  tabBar: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: C.line, backgroundColor: C.card, paddingTop: 8, paddingBottom: 6 },
+  tabItem: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 4 },
+  tabDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent' },
+  tabText: { fontSize: 11, color: C.muted, fontWeight: '500' },
+});
